@@ -124,7 +124,7 @@ margin.shift.over.time / (special.vs.pres + margin.shift.vs.turnout) +
   plot_layout(guides = "collect") +
   plot_annotation(title = "Legislative Special Elections in 2025",
                   subtitle = str_wrap(subtitle.text, 134),
-                  caption = "Calculations by John D. Johnson (@jdjmke).  Annotations show the state abbreviation, upper or lower house, and district number.",
+                  caption = "Calculations by John D. Johnson (github.com/jdjohn215/special-elections-2025).  Annotations show the state abbreviation, upper or lower house, and district number.",
                   theme = theme(plot.title = element_text(face = "bold", size = 16),
                                 plot.background = element_rect(fill = "linen")))
 ggsave("graphics/specials-comparison.png", width = 10, height = 8)
