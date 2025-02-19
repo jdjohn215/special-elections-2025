@@ -40,7 +40,8 @@ margin.shift.over.time <- specials.valid |>
   ggplot(aes(date, margin_change)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_point(aes(shape = house)) +
-  ggrepel::geom_text_repel(aes(label = label), min.segment.length = 0, seed = 3) +
+  ggrepel::geom_text_repel(aes(label = label), min.segment.length = 0, seed = 3,
+                           size = 2) +
   scale_x_date(limits = c(as.Date("2025-01-01"), as.Date("2025-11-01")),
                date_breaks = "1 month", date_labels = "%b", name = "2025") +
   scale_y_continuous(limits = c(-25,25),
@@ -65,17 +66,18 @@ special.vs.pres <- specials.valid |>
   geom_hline(yintercept = 0, linetype = "dotted") +
   geom_vline(xintercept = 0, linetype = "dotted") +
   geom_point(aes(shape = house)) +
-  ggrepel::geom_text_repel(aes(label = label), min.segment.length = 0, seed = 3) +
-  scale_x_continuous(limits = c(-30,30),
-                     breaks = seq(-30,30,10),
+  ggrepel::geom_text_repel(aes(label = label), min.segment.length = 0, seed = 3,
+                           size = 2) +
+  scale_x_continuous(limits = c(-70,70),
+                     breaks = seq(-70,70,15),
                      labels = function(x){case_when(
                        x < 0 ~ paste0("+", abs(x), "R"),
                        x == 0 ~ "tie",
                        x > 0 ~ paste0("+",x,"D")
                      )},
                      name = "presidential margin (Harris % minus Trump %)") +
-  scale_y_continuous(limits = c(-30,30),
-                     breaks = seq(-30,30,10),
+  scale_y_continuous(limits = c(-70,70),
+                     breaks = seq(-70,70,15),
                      labels = function(x){case_when(
                        x < 0 ~ paste0("+", abs(x), "R"),
                        x == 0 ~ "tie",
@@ -93,7 +95,8 @@ margin.shift.vs.turnout <- specials.valid |>
   ggplot(aes(turnout_change, margin_change)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_point(aes(shape = house)) +
-  ggrepel::geom_text_repel(aes(label = label), min.segment.length = 0, seed = 3) +
+  ggrepel::geom_text_repel(aes(label = label), min.segment.length = 0, seed = 3,
+                           size = 2) +
   scale_x_continuous(limits = c(-90,-40),
                      breaks = seq(-90,-40,10),
                      labels = scales::percent_format(scale = 1),
