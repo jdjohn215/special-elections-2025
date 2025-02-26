@@ -84,10 +84,95 @@ delaware.upper.votes <- aggregate_precincts_to_district(delaware.upper.shp, dela
 delaware.lower.votes <- aggregate_precincts_to_district(delaware.lower.shp, delaware.votes)
 
 ################################################################################
+# Connecticut
+##  this data is from https://ctemspublic.tgstg.net/#/selectTown
+### click "Voting District Report"
+
+ct.orig <- read_csv("2024-precinct-data/CT-ELECTIONVOTINGDISTRICT-1517.csv",
+                    skip = 2) |>
+  janitor::clean_names() |>
+  filter(str_detect(office_name, "Presidential Electors|State Representative|State Senator")) |>
+  mutate(office_type = word(office_name, 1, 2),
+         district = if_else(office_type != "Presidential Electors", as.numeric(word(office_name, -1)),
+                            NA),
+         precinct = paste(town_name, polling_place_name, sep = "-"),
+         final_count = as.numeric(str_remove(final_count, coll(","))))
+
+# confirm that town_name and polling_place_name correspond to individual state
+#   legislative districts
+ct.orig |>
+  group_by(precinct, office_type, office_name) |>
+  summarise() |>
+  filter(n() > 1)
+
+ct.legis.precints <- inner_join(
+  ct.orig |>
+    filter(office_type == "State Senator") |>
+    group_by(precinct, upper = district) |>
+    summarise(.groups = "drop"),
+  ct.orig |>
+    filter(office_type == "State Representative") |>
+    group_by(precinct, lower = district) |>
+    summarise(.groups = "drop")
+)
+
+connecticut.upper.votes <- ct.orig |>
+  filter(office_type == "Presidential Electors") |>
+  inner_join(ct.legis.precints) |>
+  group_by(upper, candidate_name) |>
+  summarise(votes = sum(final_count), .groups = "drop") |>
+  group_by(upper) |>
+  mutate(total_2024 = sum(votes)) |>
+  ungroup() |>
+  filter(candidate_name %in% c("Harris and Walz", "Trump and Vance")) |>
+  pivot_wider(names_from = candidate_name, values_from = votes) |>
+  mutate(state = "connecticut",
+         house = "upper") |>
+  rename(district = upper, harris = `Harris and Walz`, trump = `Trump and Vance`) |>
+  mutate(district = str_pad(district, width = 3, side = "left", pad = "0"))
+
+connecticut.lower.votes <- ct.orig |>
+  filter(office_type == "Presidential Electors") |>
+  inner_join(ct.legis.precints) |>
+  group_by(lower, candidate_name) |>
+  summarise(votes = sum(final_count), .groups = "drop") |>
+  group_by(lower) |>
+  mutate(total_2024 = sum(votes)) |>
+  ungroup() |>
+  filter(candidate_name %in% c("Harris and Walz", "Trump and Vance")) |>
+  pivot_wider(names_from = candidate_name, values_from = votes) |>
+  mutate(state = "connecticut",
+         house = "lower") |>
+  rename(district = lower, harris = `Harris and Walz`, trump = `Trump and Vance`) |>
+  mutate(district = str_pad(district, width = 3, side = "left", pad = "0"))
+
+################################################################################
+# Maine
+maine.upper.shp <- tigris::state_legislative_districts("ME", "upper", year = 2023) |>
+  select(district = SLDUST) |>
+  mutate(state = "maine",
+         house = "upper") |>
+  st_make_valid()
+maine.lower.shp <- tigris::state_legislative_districts("ME", "lower", year = 2023) |>
+  select(district = SLDLST) |>
+  mutate(state = "maine",
+         house = "lower") |>
+  st_make_valid()
+
+maine.votes <- st_read("2024-precinct-data/ME-precincts-with-results.geojson") |>
+  st_transform(crs = st_crs(maine.lower.shp)) |>
+  st_make_valid()
+
+maine.upper.votes <- aggregate_precincts_to_district(maine.upper.shp, maine.votes)
+maine.lower.votes <- aggregate_precincts_to_district(maine.lower.shp, maine.votes)
+
+################################################################################
 # combine state chambers
 all.districts <- bind_rows(
   virginia.upper.votes, virginia.lower.votes,
   iowa.upper.votes, iowa.lower.votes,
-  delaware.upper.votes, delaware.lower.votes
+  delaware.upper.votes, delaware.lower.votes,
+  maine.upper.votes, maine.lower.votes,
+  connecticut.upper.votes, connecticut.lower.votes
 )
-write_csv(all.districts, "district-votes-pres2024.csv")
+write_csv(all.districts, "precincts-to-districts/district-votes-pres2024.csv")
